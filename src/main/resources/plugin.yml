@@ -1,0 +1,43 @@
+name: HologramViewFix
+version: '${version}'
+main: com.yukile.hologramviewfix.HologramViewFix
+api-version: '1.21'
+author: Yukile
+description: Fixes hologram visibility, tracking and flicker issues across all major hologram systems on Paper.
+
+softdepend:
+  - Citizens
+  - DecentHolograms
+  - FancyHolograms
+  - CMI
+  - HolographicDisplays
+  - ProtocolLib
+
+commands:
+  hologramviewfix:
+    description: HologramViewFix administration command
+    usage: /hologramviewfix <reload|status|scan|debug>
+    permission: hologramviewfix.admin
+    aliases: [hvf]
+
+permissions:
+  hologramviewfix.admin:
+    description: Full access to all HologramViewFix commands
+    default: op
+    children:
+      hologramviewfix.reload: true
+      hologramviewfix.status: true
+      hologramviewfix.scan: true
+      hologramviewfix.debug: true
+  hologramviewfix.reload:
+    description: Allows reloading the configuration
+    default: op
+  hologramviewfix.status:
+    description: Allows viewing plugin status
+    default: op
+  hologramviewfix.scan:
+    description: Allows triggering a manual hologram scan
+    default: op
+  hologramviewfix.debug:
+    description: Allows toggling debug mode
+    default: op

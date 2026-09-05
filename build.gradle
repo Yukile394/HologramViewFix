@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.5'
+}
+
+group = 'com.yukile'
+version = '1.0.0'
+
+java {
+    def javaVersion = JavaVersion.toVersion(21)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url = 'https://maven.citizensnpcs.co/repo' }
+    maven { url = 'https://repo.dmulloy2.net/repository/public/' }
+}
+
+dependencies {
+    // Paper API - provided by the server at runtime
+    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+
+    // Citizens - real API dependency, compileOnly, safe if absent (soft-depend)
+    compileOnly 'net.citizensnpcs:citizens-main:2.0.35-SNAPSHOT'
+
+    // ProtocolLib - real API dependency, compileOnly, safe if absent (soft-depend)
+    compileOnly 'com.comphenix.protocol:ProtocolLib:5.3.0'
+
+    // NOTE: DecentHolograms, FancyHolograms, CMI and HolographicDisplays do not
+    // publish stable public Maven artifacts. Instead of a compile-time dependency
+    // (which would break the build if unavailable), those integrations are
+    // implemented via reflection against each plugin's public API at runtime.
+    // This keeps the build 100% reproducible on GitHub Actions with zero local
+    // jar files required, while still allowing full soft-integration.
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(21)
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    archiveBaseName.set('HologramViewFix')
+    archiveVersion.set(project.version.toString())
+}
+
+build {
+    dependsOn shadowJar
+}
+
+tasks.jar {
+    enabled = false
+}

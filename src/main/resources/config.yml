@@ -1,0 +1,38 @@
+# =====================================================
+# HologramViewFix Configuration
+# =====================================================
+
+enabled: true
+
+view-distance:
+  enabled: true
+  distance: 128
+
+minimum-distance: 0
+maximum-distance: 128
+
+# How often (in ticks) the tracker cycle runs. 20 ticks = 1 second.
+check-interval: 5
+
+chunk-check: true
+
+fix-flicker: true
+fix-missing-holograms: true
+fix-display-entities: true
+fix-armorstand-holograms: true
+fix-citizens: true
+fix-packet-holograms: true
+
+integrations:
+  citizens: true
+  decent-holograms: true
+  fancy-holograms: true
+  cmi: true
+  holographic-displays: true
+  protocol-lib: true
+
+performance:
+  # Maximum number of holograms re-checked per cycle to avoid TPS impact.
+  max-checks-per-cycle: 100
+
+debug: false
