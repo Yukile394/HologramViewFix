@@ -15,8 +15,9 @@ java {
 repositories {
     mavenCentral()
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
-    maven { url = 'https://maven.citizensnpcs.co/repo' }
+    maven { url = 'https://repo.citizensnpcs.co/repository/citizens/' }
     maven { url = 'https://repo.dmulloy2.net/repository/public/' }
+    maven { url = 'https://jitpack.io' }
 }
 
 dependencies {
@@ -24,7 +25,9 @@ dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 
     // Citizens - real API dependency, compileOnly, safe if absent (soft-depend)
-    compileOnly 'net.citizensnpcs:citizens-main:2.0.35-SNAPSHOT'
+    compileOnly('net.citizensnpcs:citizens-main:2.0.33-SNAPSHOT') {
+        transitive = false
+    }
 
     // ProtocolLib - real API dependency, compileOnly, safe if absent (soft-depend)
     compileOnly 'com.comphenix.protocol:ProtocolLib:5.3.0'
