@@ -21,17 +21,13 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Ensure Gradle Wrapper exists
+      - name: Remove any existing wrapper files
         run: |
-          if [ ! -f "./gradlew" ] || [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "Gradle Wrapper missing or incomplete — generating it now."
-            gradle wrapper --gradle-version 8.10.2
-          else
-            echo "Gradle Wrapper already present."
-          fi
+          rm -f gradlew gradlew.bat
+          rm -rf gradle/wrapper
+
+      - name: Generate fresh Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.10.2
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -53,16 +49,3 @@ jobs:
           name: HologramViewFix
           path: build/libs/*.jar
           if-no-files-found: error
-
-      - name: Commit generated wrapper (first run only)
-        if: success()
-        run: |
-          if [ -n "$(git status --porcelain gradle/wrapper gradlew gradlew.bat 2>/dev/null)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
-            git commit -m "chore: add generated Gradle Wrapper [skip ci]" || echo "Nothing to commit"
-            git push || echo "Push skipped (likely a PR from a fork or protected branch)"
-          else
-            echo "Wrapper already committed, nothing to do."
-          fi
