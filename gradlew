@@ -29,13 +29,13 @@ app_path=$0
 
 # Need this for daisy-chained symlinks.
 while
-    APP_HOME=${app_path%"${app_path##*/}"}  # leaves a trailing /; empty if no leading path
+    APP_HOME=${app_path%"${app_path##*/}"}
     [ -h "$app_path" ]
 do
     ls=$( ls -ld "$app_path" )
     link=${ls#*' -> '}
-    case $link in             #(
-      /*)   app_path=$link ;; #(
+    case $link in
+      /*)   app_path=$link ;;
       *)    app_path=$APP_HOME$link ;;
     esac
 done
@@ -44,10 +44,8 @@ APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exi
 APP_BASE_NAME=${0##*/}
 APP_NAME="Gradle"
 
-# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS="-Xmx64m -Xms64m"
 
-# Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 
 warn () {
@@ -61,25 +59,19 @@ die () {
     exit 1
 } >&2
 
-# OS specific support (must be 'true' or 'false').
 cygwin=false
 msys=false
 darwin=false
 nonstop=false
-case "$( uname )" in                #(
-  CYGWIN* )         cygwin=true  ;; #(
-  Darwin* )         darwin=true  ;; #(
-  MSYS* | MINGW* )  msys=true    ;; #(
+case "$( uname )" in
+  CYGWIN* )         cygwin=true  ;;
+  Darwin* )         darwin=true  ;;
+  MSYS* | MINGW* )  msys=true    ;;
   NONSTOP* )        nonstop=true ;;
 esac
 
-CLASSPATH="\$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
-
-
-# Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
-        # IBM's JDK on AIX uses strange locations for the executables
         JAVACMD=$JAVA_HOME/jre/sh/java
     else
         JAVACMD=$JAVA_HOME/bin/java
@@ -98,54 +90,37 @@ Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
 fi
 
-# Increase the maximum file descriptors if we can.
 if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
-    case $MAX_FD in #(
+    case $MAX_FD in
       max*)
         MAX_FD=$( ulimit -H -n ) ||
             warn "Could not query maximum file descriptor limit"
     esac
-    case $MAX_FD in  #(
-      '' | soft) :;; #(
+    case $MAX_FD in
+      '' | soft) :;;
       *)
         ulimit -n "$MAX_FD" ||
             warn "Could not set maximum file descriptor limit to $MAX_FD"
     esac
 fi
 
-# Collect all arguments for the java command, stacking in reverse order:
-#   * args from the command line
-#   * the main class name
-#   * -classpath
-#   * -D...appname settings
-#   * --module-path (only if needed)
-#   * DEFAULT_JVM_OPTS, JAVA_OPTS, and GRADLE_OPTS environment variables.
+APP_HOME_CP="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
 
-# For Cygwin or MSYS, switch paths to Windows format before running java
 if "$cygwin" || "$msys" ; then
     APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
-    CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
-
+    APP_HOME_CP=$( cygpath --path --mixed "$APP_HOME_CP" )
     JAVACMD=$( cygpath --unix "$JAVACMD" )
 fi
 
-# Collect all arguments for the java command:
-#   * DEFAULT_JVM_OPTS, JAVA_OPTS, JAVA_OPTS, and optsEnvironmentVar are not allowed to contain shell fragments,
-#     and any embedded shellness will be escaped.
-#   * For example: A user cannot expect ${Hostname} to be expanded, as it is an environment variable and will
-#     be replaced by the value of the Hostname environment variable at the time of gradlew execution.
-#   * All other arguments are considered dependent on shellness
-
 set -- \
         "-Dorg.gradle.appname=$APP_BASE_NAME" \
-        -classpath "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" \
+        -classpath "$APP_HOME_CP" \
         org.gradle.wrapper.GradleWrapperMain \
         "$@"
 
-# Stop when "xargs" is not available.
 if ! command -v xargs >/dev/null 2>&1
 then
     die "xargs is not available"
 fi
 
-exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "-Dorg.gradle.appname=$APP_BASE_NAME" -classpath "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"
+exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "-Dorg.gradle.appname=$APP_BASE_NAME" -classpath "$APP_HOME_CP" org.gradle.wrapper.GradleWrapperMain "$@"
