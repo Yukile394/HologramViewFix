@@ -15,29 +15,23 @@ java {
 repositories {
     mavenCentral()
     maven { url = 'https://repo.papermc.io/repository/maven-public/' }
-    maven { url = 'https://repo.citizensnpcs.co/repository/citizens/' }
     maven { url = 'https://repo.dmulloy2.net/repository/public/' }
-    maven { url = 'https://jitpack.io' }
 }
 
 dependencies {
     // Paper API - provided by the server at runtime
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 
-    // Citizens - real API dependency, compileOnly, safe if absent (soft-depend)
-    compileOnly('net.citizensnpcs:citizens-main:2.0.33-SNAPSHOT') {
-        transitive = false
-    }
-
     // ProtocolLib - real API dependency, compileOnly, safe if absent (soft-depend)
     compileOnly 'com.comphenix.protocol:ProtocolLib:5.3.0'
 
-    // NOTE: DecentHolograms, FancyHolograms, CMI and HolographicDisplays do not
-    // publish stable public Maven artifacts. Instead of a compile-time dependency
-    // (which would break the build if unavailable), those integrations are
-    // implemented via reflection against each plugin's public API at runtime.
-    // This keeps the build 100% reproducible on GitHub Actions with zero local
-    // jar files required, while still allowing full soft-integration.
+    // NOTE: Citizens, DecentHolograms, FancyHolograms, CMI and HolographicDisplays
+    // do not publish reliably-resolvable public Maven artifacts (Citizens' snapshot
+    // repository structure changes frequently and breaks CI builds). Instead of a
+    // compile-time dependency, all five integrations are implemented via reflection
+    // against each plugin's public API/classes at runtime. This keeps the build
+    // 100% reproducible on GitHub Actions with zero external repository dependence
+    // beyond Paper and ProtocolLib, while still allowing full soft-integration.
 }
 
 tasks.withType(JavaCompile).configureEach {
