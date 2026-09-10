@@ -5,7 +5,9 @@ import com.yukile.hologramviewfix.util.ConfigManager;
 import com.yukile.hologramviewfix.util.LoggerUtil;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.joml.Vector3f;
 
 /**
  * Bridges raw entity scans into the {@link HologramCache}, using the
@@ -62,8 +64,38 @@ public final class HologramTracker {
 
         HologramInfo info = new HologramInfo(entity.getUniqueId(), type, entity.getLocation());
         cache.add(info);
+        applyScaleAwareViewRange(entity);
         logger.debug("Detected " + type + " hologram at " + shortLoc(entity));
         return info;
+    }
+
+    /**
+     * Vanilla's client-side entity tracking distance for Display entities is
+     * fixed and does NOT scale with the entity's transform scale. That means
+     * a hologram scaled up 5-10x visually still gets culled by the client at
+     * the same distance as a normal-sized one, causing it to "gray out" /
+     * disappear well before the player is actually far away. We compensate
+     * by boosting the entity's own view-range proportionally to its scale.
+     */
+    public void applyScaleAwareViewRange(Entity entity) {
+        if (!configManager.isScaleAwareViewRangeEnabled()) {
+            return;
+        }
+        if (!(entity instanceof Display display)) {
+            return;
+        }
+        try {
+            Vector3f scale = display.getTransformation().getScale();
+            float maxAxis = Math.max(scale.x, Math.max(scale.y, scale.z));
+            if (maxAxis <= 1.0f) {
+                return;
+            }
+            double boosted = 1.0 + (maxAxis - 1.0) * configManager.getScaleAwareViewRangeMultiplier();
+            boosted = Math.min(boosted, configManager.getScaleAwareMaxViewRange());
+            display.setViewRange((float) boosted);
+        } catch (Exception ex) {
+            logger.debug("Failed to apply scale-aware view range: " + ex.getMessage());
+        }
     }
 
     /**
