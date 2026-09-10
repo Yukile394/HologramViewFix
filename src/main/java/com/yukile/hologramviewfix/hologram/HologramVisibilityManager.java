@@ -23,6 +23,9 @@ public final class HologramVisibilityManager {
     /** Key: playerId + ":" + entityId -> last known state. */
     private final Map<String, HologramInfo.VisibilityState> stateCache = new ConcurrentHashMap<>();
 
+    /** Key: playerId + ":" + entityId -> ms timestamp of last actual refresh sent. */
+    private final Map<String, Long> lastRefreshMillis = new ConcurrentHashMap<>();
+
     private final HologramCache cache;
     private final List<HologramIntegration> integrations;
     private final ConfigManager configManager;
@@ -70,8 +73,16 @@ public final class HologramVisibilityManager {
             return;
         }
 
-        if (lastState == HologramInfo.VisibilityState.VISIBLE) {
-            // Flicker prevention: already known visible, skip redundant work.
+        long now = System.currentTimeMillis();
+        long lastRefresh = lastRefreshMillis.getOrDefault(cacheKey, 0L);
+        boolean dueForForceResync = (now - lastRefresh) >= configManager.getForceResyncMillis();
+
+        if (lastState == HologramInfo.VisibilityState.VISIBLE && !dueForForceResync) {
+            // Flicker prevention: already known visible and recently
+            // confirmed, skip redundant work. We still periodically
+            // force-resync below (dueForForceResync) so that a client
+            // that silently dropped its spawn packet self-heals instead
+            // of staying invisible forever.
             return;
         }
 
@@ -81,19 +92,31 @@ public final class HologramVisibilityManager {
             return;
         }
 
+        com.yukile.hologramviewfix.HologramViewFix plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(
+                com.yukile.hologramviewfix.HologramViewFix.class);
+
         HologramIntegration owningIntegration = findIntegrationFor(info.getSourceType());
         try {
+            // Re-apply scale-aware view range on every refresh in case the
+            // hologram's scale changed, or the entity view-range was reset
+            // (e.g. plugin reload, entity re-created by its owning plugin).
+            plugin.getHologramTracker().applyScaleAwareViewRange(entity);
+
             if (owningIntegration != null && owningIntegration.isAvailable()) {
                 owningIntegration.refresh(info, player);
             } else {
                 // Generic fallback for ArmorStand/Display holograms with no
-                // dedicated plugin integration: a plain re-show is safe
-                // and non-destructive, and Paper de-duplicates automatically
-                // if the entity is already shown.
-                player.showEntity(org.bukkit.plugin.java.JavaPlugin.getPlugin(
-                        com.yukile.hologramviewfix.HologramViewFix.class), entity);
+                // dedicated plugin integration. On a forced resync we hide
+                // then re-show, since simply calling showEntity again is a
+                // no-op on a client that's already (incorrectly) tracking
+                // the entity as shown server-side but never rendered it.
+                if (dueForForceResync) {
+                    player.hideEntity(plugin, entity);
+                }
+                player.showEntity(plugin, entity);
             }
             stateCache.put(cacheKey, HologramInfo.VisibilityState.VISIBLE);
+            lastRefreshMillis.put(cacheKey, now);
             logger.debug("Visibility restored for " + info.getSourceType() + " to " + player.getName());
         } catch (Exception ex) {
             logger.debug("Failed to refresh visibility: " + ex.getMessage());
@@ -111,10 +134,12 @@ public final class HologramVisibilityManager {
 
     public void clearForPlayer(UUID playerId) {
         stateCache.keySet().removeIf(k -> k.startsWith(playerId + ":"));
+        lastRefreshMillis.keySet().removeIf(k -> k.startsWith(playerId + ":"));
     }
 
     public void clearAll() {
         stateCache.clear();
+        lastRefreshMillis.clear();
     }
 
     private HologramIntegration findIntegrationFor(HologramInfo.SourceType sourceType) {
