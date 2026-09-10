@@ -6,10 +6,24 @@ enabled: true
 
 view-distance:
   enabled: true
-  distance: 128
+  distance: 256
 
 minimum-distance: 0
-maximum-distance: 128
+maximum-distance: 256
+
+# Automatically boosts the client-side view-range of TextDisplay/ItemDisplay/
+# BlockDisplay entities based on how large their transform scale is, so big
+# scaled-up holograms don't get culled by the client at normal distances.
+scale-aware-view-range:
+  enabled: true
+  # Multiplier applied per unit of scale above 1.0.
+  multiplier: 1.5
+  max-view-range: 10.0
+
+# Re-sends visibility to every tracked player periodically even if our
+# cache still says "visible", to self-heal cases where a client silently
+# dropped the spawn packet (chunk reload races, netty hiccups, etc).
+force-resync-seconds: 30
 
 # How often (in ticks) the tracker cycle runs. 20 ticks = 1 second.
 check-interval: 5
