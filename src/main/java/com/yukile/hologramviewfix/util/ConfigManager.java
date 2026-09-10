@@ -35,6 +35,11 @@ public final class ConfigManager {
     private int maxChecksPerCycle;
     private boolean debug;
 
+    private boolean scaleAwareViewRangeEnabled;
+    private double scaleAwareViewRangeMultiplier;
+    private double scaleAwareMaxViewRange;
+    private long forceResyncMillis;
+
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
         plugin.saveDefaultConfig();
@@ -76,6 +81,11 @@ public final class ConfigManager {
 
         maxChecksPerCycle = Math.max(1, cfg.getInt("performance.max-checks-per-cycle", 100));
         debug = cfg.getBoolean("debug", false);
+
+        scaleAwareViewRangeEnabled = cfg.getBoolean("scale-aware-view-range.enabled", true);
+        scaleAwareViewRangeMultiplier = cfg.getDouble("scale-aware-view-range.multiplier", 1.5);
+        scaleAwareMaxViewRange = cfg.getDouble("scale-aware-view-range.max-view-range", 10.0);
+        forceResyncMillis = Math.max(1, cfg.getInt("force-resync-seconds", 30)) * 1000L;
     }
 
     public boolean isEnabled() {
@@ -160,5 +170,21 @@ public final class ConfigManager {
 
     public boolean isDebug() {
         return debug;
+    }
+
+    public boolean isScaleAwareViewRangeEnabled() {
+        return scaleAwareViewRangeEnabled;
+    }
+
+    public double getScaleAwareViewRangeMultiplier() {
+        return scaleAwareViewRangeMultiplier;
+    }
+
+    public double getScaleAwareMaxViewRange() {
+        return scaleAwareMaxViewRange;
+    }
+
+    public long getForceResyncMillis() {
+        return forceResyncMillis;
     }
 }
